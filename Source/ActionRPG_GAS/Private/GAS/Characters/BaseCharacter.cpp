@@ -4,6 +4,7 @@
 #include "GAS/Characters/BaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GAS/AttributeSets/BaseAttributeSet.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -35,6 +36,9 @@ ABaseCharacter::ABaseCharacter()
 
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.f;
+
+	// Create the Attribute Set
+	BaseAttributeSet = CreateDefaultSubobject<UBaseAttributeSet>(TEXT("BaseAttributeSet"));
 
 }
 
