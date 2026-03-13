@@ -30,6 +30,8 @@ protected:
 
 	virtual void OnRep_PlayerState() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS")
+	TArray<TSubclassOf<UGameplayAbility>> StartingAbilities;
 
 
 public:		
@@ -44,4 +46,12 @@ public:
 	// Inherited via IAbilitySystemInterface
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	UFUNCTION(BlueprintCallable, Category = "GAS")
+	TArray<FGameplayAbilitySpecHandle> GrantAbilities(TArray<TSubclassOf<UGameplayAbility>> AbilitiesToGrant);
+
+	UFUNCTION(BlueprintCallable, Category = "GAS")
+	void RemoveAbilities(TArray<FGameplayAbilitySpecHandle> AbilityHandlesToRemove);
+
+	UFUNCTION(BlueprintCallable, Category = "GAS")
+	void SendAbilitiesChangedEvent();
 };

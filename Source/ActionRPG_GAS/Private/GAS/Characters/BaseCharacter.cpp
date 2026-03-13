@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GAS/AttributeSets/BaseAttributeSet.h"
+#include "AbilitySystemBlueprintLibrary.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -56,6 +57,7 @@ void ABaseCharacter::PossessedBy(AController* NewController)
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		GrantAbilities(StartingAbilities);
 	}
 }
 
@@ -88,3 +90,50 @@ UAbilitySystemComponent* ABaseCharacter::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
+TArray<FGameplayAbilitySpecHandle> ABaseCharacter::GrantAbilities(TArray<TSubclassOf<UGameplayAbility>> AbilitiesToGrant)
+{
+	if (!AbilitySystemComponent || !HasAuthority())
+	{
+		return TArray<FGameplayAbilitySpecHandle>();
+	}
+
+	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
+
+	for (TSubclassOf<UGameplayAbility> Ability : AbilitiesToGrant)
+	{
+		if (Ability)
+		{
+			FGameplayAbilitySpecHandle SpecHandle = AbilitySystemComponent->GiveAbility(
+				FGameplayAbilitySpec(
+				Ability, 1, -1, this
+			));
+			AbilityHandles.Add(SpecHandle);
+		}
+	}
+
+	SendAbilitiesChangedEvent();
+	return AbilityHandles;
+}
+
+void ABaseCharacter::RemoveAbilities(TArray<FGameplayAbilitySpecHandle> AbilityHandlesToRemove)
+{
+	if (!AbilitySystemComponent || !HasAuthority())
+	{
+		return;
+	}
+	for (FGameplayAbilitySpecHandle Handle : AbilityHandlesToRemove)
+	{
+		AbilitySystemComponent->ClearAbility(Handle);
+	}
+	SendAbilitiesChangedEvent();
+}
+
+void ABaseCharacter::SendAbilitiesChangedEvent()
+{
+	FGameplayEventData EventData;
+	EventData.EventTag = FGameplayTag::RequestGameplayTag(FName("Event.Abilities.Changed"));
+	EventData.Instigator = this;
+	EventData.Target = this;	
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventData.EventTag, EventData);
+}
